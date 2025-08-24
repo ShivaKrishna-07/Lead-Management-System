@@ -3,7 +3,6 @@ export const sendAuthCookie = (res, name, token, days, isProd) => {
     httpOnly: true,
     secure: isProd,
     sameSite: "None",
-    domain: ".lead-management-system-psi.vercel.app",
     maxAge: days * 24 * 60 * 60 * 1000,
     path: "/",
   });
