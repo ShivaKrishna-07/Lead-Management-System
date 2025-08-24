@@ -1,88 +1,70 @@
-import { useEffect, useState, useCallback } from 'react';
-import { AgGridReact } from 'ag-grid-react';
+
+import React, { useEffect, useState } from 'react';
 import { getLeads, deleteLead } from '../../api/leads';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { format } from 'date-fns';
+import LeadTable from './LeadTable';
 
 const LeadList = () => {
   const [leads, setLeads] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({}); // store filter values
+  const [filters, setFilters] = useState({});
 
-  const fetchLeads = useCallback(async (page = 1, limit = 20, appliedFilters = {}) => {
-    setLoading(true);
-    try {
-      const res = await getLeads({ page, limit, ...appliedFilters });
+  // Only fetch leads on mount and when page/filter changes
+  useEffect(() => {
+    const fetchLeads = async () => {
+      setLoading(true);
+      try {
+        const res = await getLeads({ page: pagination.page, limit: pagination.limit, ...filters });
+        setLeads(res.data.data);
+        setPagination({
+          page: res.data.page,
+          limit: res.data.limit,
+          total: res.data.total,
+          totalPages: res.data.totalPages,
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeads();
+  }, [pagination.page, pagination.limit, filters]);
+
+  const deleteHandler = async (id) => {
+    if (window.confirm('Are you sure you want to delete this lead?')) {
+      await deleteLead(id);
+      // refetch leads after delete
+      const res = await getLeads({ page: pagination.page, limit: pagination.limit, ...filters });
       setLeads(res.data.data);
       setPagination({
         page: res.data.page,
         limit: res.data.limit,
         total: res.data.total,
-        totalPages: res.data.totalPages
+        totalPages: res.data.totalPages,
       });
-    } catch (err) {
-      console.error(err);
-    } finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { fetchLeads(pagination.page, pagination.limit, filters); }, [fetchLeads, filters, pagination.page, pagination.limit]);
-
-  const deleteHandler = async (id) => {
-    if (window.confirm('Are you sure you want to delete this lead?')) {
-      await deleteLead(id);
-      fetchLeads(pagination.page, pagination.limit, filters);
     }
   };
-
-  const columns = [
-    { headerName: 'Name', field: 'first_name', valueGetter: (params) => `${params.data.first_name} ${params.data.last_name}` },
-    { headerName: 'Email', field: 'email', filter: true },
-    { headerName: 'Phone', field: 'phone' },
-    { headerName: 'Company', field: 'company', filter: true },
-    { headerName: 'City', field: 'city', filter: true },
-    { headerName: 'Source', field: 'source', filter: true },
-    { headerName: 'Status', field: 'status', filter: true },
-    { headerName: 'Score', field: 'score', filter: 'agNumberColumnFilter' },
-    { headerName: 'Lead Value', field: 'lead_value', filter: 'agNumberColumnFilter' },
-    { headerName: 'Last Activity', field: 'last_activity_at', valueFormatter: (params) => params.value ? format(new Date(params.value), 'yyyy-MM-dd') : '-', filter: 'agDateColumnFilter' },
-    { headerName: 'Qualified', field: 'is_qualified', filter: true, valueFormatter: (params) => params.value ? 'Yes' : 'No' },
-    { headerName: 'Actions', field: 'actions', cellRendererFramework: (params) => (
-      <div>
-        <a href={`/leads/edit/${params.data._id}`} style={{ marginRight: 8 }}>Edit</a>
-        <button onClick={() => deleteHandler(params.data._id)}>Delete</button>
-      </div>
-    )}
-  ];
-
-  const onFilterChanged = (params) => {
-    const agFilters = params.api.getFilterModel();
-    const newFilters = {};
-    for (const key in agFilters) {
-      const filter = agFilters[key];
-      if (filter.filter) newFilters[key] = filter.filter; // simple string/number filters
-    }
-    setFilters(newFilters);
-  };
-
-  console.log('Leads:', leads);
-  
 
   return (
-    <div className="ag-theme-alpine" style={{ height: 600, width: '100%' }}>
-      <AgGridReact
-        rowData={leads}
-        columnDefs={columns}
-        pagination={true}
-        paginationPageSize={pagination.limit}
-        onPaginationChanged={(params) => {
-          if (params.api) {
-            const currentPage = params.api.paginationGetCurrentPage() + 1;
-            fetchLeads(currentPage, pagination.limit, filters);
-          }
-        }}
-        onFilterChanged={onFilterChanged}
+    <div>
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
+          Leads Overview
+        </h2>
+        <p className="text-gray-600 text-sm font-medium">
+          Manage and track your sales pipeline with detailed lead information
+        </p>
+      </div>
+
+      <LeadTable
+        leads={leads}
+        pagination={pagination}
+        filters={filters}
+        loading={loading}
+        onDelete={deleteHandler}
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+        onFilterChange={(newFilters) => setFilters(newFilters)}
       />
     </div>
   );
