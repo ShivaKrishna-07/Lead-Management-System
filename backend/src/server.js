@@ -18,7 +18,7 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: env.corsOrigin,
+    origin: 'https://lead-management-system-psi.vercel.app',
     credentials: true,
   })
 );

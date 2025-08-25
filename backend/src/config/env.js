@@ -7,5 +7,5 @@ export const env = {
   jwtDays: Number(process.env.JWT_EXPIRES_IN_DAYS || 7),
   cookieName: process.env.COOKIE_NAME || 'access_token',
   nodeEnv: process.env.NODE_ENV || 'development',
-  corsOrigin: 'https://lead-management-system-psi.vercel.app/'
+  corsOrigin: 'https://lead-management-system-psi.vercel.app'
 };
