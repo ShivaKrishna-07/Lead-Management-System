@@ -25,7 +25,6 @@ const LoginPage = () => {
       toast.error("Login failed. Check your credentials.");
     } finally {
       setLoading(false);
-      generateLeads();
     }
   };
 
