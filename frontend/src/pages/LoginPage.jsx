@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { generateLeads } from "../utils/generateLeads";
 
 const LoginPage = () => {
   const { register, handleSubmit } = useForm();
@@ -24,6 +25,7 @@ const LoginPage = () => {
       toast.error("Login failed. Check your credentials.");
     } finally {
       setLoading(false);
+      generateLeads();
     }
   };
 

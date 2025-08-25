@@ -13,7 +13,7 @@ function randomInt(min, max) {
 }
 
 export async function generateLeads(count = 25) {
-  for (let i = 25; i < count+25; i++) {
+  for (let i = 47; i < 150; i++) {
     const lead = {
       first_name: `Test${i+1}`,
       last_name: `User${i+1}`,
